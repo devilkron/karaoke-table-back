@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  user_id   Int       @id @default(autoincrement())
+  username  String    @unique @db.VarChar(30)
+  password  String    @db.VarChar(72)
+  firstname String    @db.VarChar(50)
+  lastname  String    @db.VarChar(50)
+  address   String    @db.VarChar(150)
+  phone     String    @db.VarChar(10)
+  email     String    @db.VarChar(50)
+  role      Role      @default(USER)
+  Booking   Booking[]
+
+  @@map("users")
+}
+
+enum BookingStatus {
+  WAIT
+  APPROVE
+  CANCEL
+  SUCCEED
+}
+
+model Booking {
+  booking_id       Int           @id @default(autoincrement())
+  booking_datatime DateTime
+  status_booking   BookingStatus @default(WAIT)
+  note_booking     String        @db.VarChar(100)
+  table            Table         @relation(fields: [tableId], references: [table_id], onDelete: Cascade, onUpdate: Cascade)
+  tableId          Int           @map("table_id")
+  user             User          @relation(fields: [userId], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  userId           Int           @map("user_id")
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@map("bookings")
+}
+
+enum TableStatus {
+  FREE
+  BUSY
+}
+
+model Table {
+  table_id     Int         @id @default(autoincrement())
+  table_img    String
+  table_name   String      @db.VarChar(50)
+  table_status TableStatus @default(FREE)
+  table_seat   Int
+  table_price  Int
+  type_table   Type_Table  @relation(fields: [typeId], references: [type_id], onDelete: Cascade, onUpdate: Cascade)
+  typeId       Int         @map("type_id")
+  Booking      Booking[]
+
+  @@map("tables")
+}
+
+model Type_Table {
+  type_id   Int     @id @default(autoincrement())
+  type_name String  @db.VarChar(50)
+  Table     Table[]
+
+  @@map("types")
+}
